@@ -193,6 +193,9 @@ pub fn validate_profile(mut value: ProfileDraft, catalog: &ProfileCatalog) -> Va
     if !matches!(value.fill_mode.as_str(), "manual" | "copy") {
         reject("applicant.fill_mode must be manual or copy");
     }
+    if value.fill_mode == "copy" && value.procedure == "huellas_dggm" {
+        reject("applicant.fill_mode must be manual for the DGGM card service (no sign-in to copy from)");
+    }
     if value.fill_mode == "copy" && !matches!(value.access_mode.as_str(), "clave" | "certificate") {
         reject("applicant.fill_mode=copy requires certificate or Cl@ve");
     }
@@ -217,7 +220,7 @@ pub fn validate_profile(mut value: ProfileDraft, catalog: &ProfileCatalog) -> Va
             reject("applicant.full_name must be 1-50 characters without digits");
         }
     }
-    if value.procedure != "regreso" && !catalog.nationalities.contains(&value.nationality) {
+    if value.procedure == "huellas" && !catalog.nationalities.contains(&value.nationality) {
         reject("applicant.nationality is not present in catalog");
     }
     if !catalog.timezones.contains(&value.timezone) {

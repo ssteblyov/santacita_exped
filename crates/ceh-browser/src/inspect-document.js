@@ -11,7 +11,7 @@
     '#idSede', "select[name='idSede']", '#txtTelefonoCitado', '#emailUNO', '#emailDOS',
     "input[name*='fecha']", "select[name*='fecha']", "input[name*='hora']", "select[name*='hora']",
     '.ui-datepicker', "input[type='radio'][name*='cita' i]", '#captcha', "input[name*='captcha' i]",
-    "img[src*='captcha' i]", 'form[action="salirInicio"] #btnSubmit'];
+    "img[src*='captcha' i]", 'form[action="salirInicio"] #btnSubmit', '#btnEntrar'];
   const visible = selectors.filter(selector => Array.from(document.querySelectorAll(selector)).some(shown));
   if (Array.from(document.querySelectorAll('select[id^="tramiteGrupo["]')).some(shown)) visible.push('select[id^="tramiteGrupo["]:visible');
   const text = document.body?.innerText ?? '';

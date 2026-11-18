@@ -36,3 +36,21 @@ fn every_supported_browser_is_accepted_and_an_unknown_one_is_not() {
     let report = serde_json::to_value(validate_profile(draft, &catalog)).unwrap();
     assert!(report["errors"].to_string().contains("browser must be"), "{report}");
 }
+
+#[test]
+fn dggm_card_service_needs_nie_and_name_typed_and_no_nationality() {
+    let corpus: Value = serde_json::from_str(include_str!("../../../contracts/fixtures/profile-validation.json")).unwrap();
+    let catalog: ProfileCatalog = serde_json::from_value(corpus["catalog"].clone()).unwrap();
+    let valid = corpus["cases"].as_array().unwrap().iter()
+        .find(|c| c["expected"]["errors"].as_array().is_some_and(Vec::is_empty)
+            && c["draft"]["procedure"] == "huellas" && c["draft"]["fill_mode"] == "manual")
+        .expect("a valid manual TIE fixture");
+    let mut draft: ProfileDraft = serde_json::from_value(valid["draft"].clone()).unwrap();
+    draft.procedure = "huellas_dggm".into();
+    draft.nationality = String::new();
+    let report = serde_json::to_value(validate_profile(draft.clone(), &catalog)).unwrap();
+    assert!(report["errors"].as_array().unwrap().is_empty(), "{report}");
+    draft.fill_mode = "copy".into();
+    let report = serde_json::to_value(validate_profile(draft, &catalog)).unwrap();
+    assert!(report["errors"].to_string().contains("applicant.fill_mode must be manual"), "{report}");
+}

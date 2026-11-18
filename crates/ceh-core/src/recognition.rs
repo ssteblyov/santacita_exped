@@ -283,7 +283,11 @@ pub fn recognize(snapshot: &PageSnapshot) -> Result<Recognition, InvalidSnapshot
         PageKind::Province
     } else if visible("select[id^=\"tramiteGrupo[\"]:visible") {
         PageKind::Procedure
-    } else if visible("#btnAccesoClave") {
+    } else if visible("#btnAccesoClave")
+        || (matches!(snapshot.endpoint.as_str(), "acInfo" | "volverInfo") && visible("#btnEntrar"))
+    {
+        // The DGGM card queue has no Cl@ve step: its information page (acInfo, or volverInfo after
+        // Volver) only offers Entrar.
         PageKind::Auth
     } else if applicant {
         if no_slots {

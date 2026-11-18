@@ -38,12 +38,14 @@ impl ApplicantInput {
         {
             return Err(BrowserError::Unsupported);
         }
-        let regreso = profile.procedure == "regreso";
+        // `regreso` names the form shape: a document-type choice and no nationality list. The DGGM
+        // card queue uses that shape too, always with NIE.
+        let regreso = matches!(profile.procedure.as_str(), "regreso" | "huellas_dggm");
         let copy = profile.fill_mode == "copy";
         if copy && !matches!(profile.access_mode.as_str(), "certificate" | "clave") {
             return Err(BrowserError::Unsupported);
         }
-        let kind = if regreso {
+        let kind = if profile.procedure == "regreso" {
             profile.document_type.as_str()
         } else {
             "NIE"
@@ -53,6 +55,9 @@ impl ApplicantInput {
                 || !bounded(&profile.document_number, 128)
                 || !bounded(&profile.full_name, 1024))
         {
+            return Err(BrowserError::Unsupported);
+        }
+        if profile.procedure == "huellas_dggm" && copy {
             return Err(BrowserError::Unsupported);
         }
         if !regreso && !bounded(&profile.nationality, 256) {

@@ -78,3 +78,21 @@ fn the_block_marker_names_the_phrase_that_made_a_page_a_block() {
     assert_eq!(block_marker("Demasiadas solicitudes, inténtelo más tarde"), Some("demasiadas solicitudes"));
     assert_eq!(block_marker("Seleccione la provincia donde solicitar la cita"), None);
 }
+
+#[test]
+fn the_dggm_information_page_with_only_entrar_is_the_entry_step() {
+    use ceh_core::model::PageKind;
+    let page = |endpoint: &str| -> PageKind {
+        let snapshot: PageSnapshot = serde_json::from_value(serde_json::json!({
+            "visible": ["body", "#btnEntrar"],
+            "frames": [{"text": "POLICÍA-EXPEDICIÓN DE TARJETAS CUYA AUTORIZACIÓN RESUELVE LA DIRECCIÓN GENERAL DE GESTIÓN MIGRATORIA"}],
+            "endpoint": endpoint
+        }))
+        .unwrap();
+        recognize(&snapshot).unwrap().kind
+    };
+    assert_eq!(page("acInfo"), PageKind::Auth);
+    assert_eq!(page("volverInfo"), PageKind::Auth);
+    // An Entrar button anywhere else is not taken for the entry step.
+    assert_ne!(page("acEntrada"), PageKind::Auth);
+}

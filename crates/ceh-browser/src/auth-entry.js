@@ -4,7 +4,11 @@ _step => {
   return el.isConnected && !el.disabled && el.getAttribute('aria-disabled') !== 'true'
    && style.visibility === 'visible' && box.width > 0 && box.height > 0;
  };
- const entries = Array.from(document.querySelectorAll('#btnAccesoClave')).filter(visible);
+ let entries = Array.from(document.querySelectorAll('#btnAccesoClave')).filter(visible);
+ // The DGGM card queue has no Cl@ve: its information page (acInfo, volverInfo) only offers Entrar.
+ if (entries.length === 0 && ['acInfo', 'volverInfo'].includes(location.pathname.split('/').pop())) {
+  entries = Array.from(document.querySelectorAll('#btnEntrar')).filter(visible);
+ }
  if (entries.length !== 1) return 'refused';
  const entry = entries[0];
  const controls = Array.from(entry.querySelectorAll('button, a[href], input[type=submit], input[type=button], [role=button]')).filter(visible);
