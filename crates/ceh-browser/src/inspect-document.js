@@ -14,7 +14,12 @@
     "img[src*='captcha' i]", 'form[action="salirInicio"] #btnSubmit', '#btnEntrar'];
   const visible = selectors.filter(selector => Array.from(document.querySelectorAll(selector)).some(shown));
   if (Array.from(document.querySelectorAll('select[id^="tramiteGrupo["]')).some(shown)) visible.push('select[id^="tramiteGrupo["]:visible');
-  const text = document.body?.innerText ?? '';
+  let text = document.body?.innerText ?? '';
+  // The site's sticky header swaps to a compact version once the page is scrolled, which changed the
+  // page text under every click that scrolled first. It carries no page content: leave it out.
+  const header = document.querySelector('header#header.mf-header');
+  const headerText = header ? header.innerText : '';
+  if (headerText && text.startsWith(headerText)) text = text.slice(headerText.length);
   if (text.length > 65536) throw new Error('document inspection limit');
   const applicant = document.querySelector('#txtIdCitado');
   const restart = document.querySelector('form[action="salirInicio"] #btnSubmit');
