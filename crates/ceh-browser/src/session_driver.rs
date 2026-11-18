@@ -383,7 +383,7 @@ impl SessionDriver {
             ..Default::default()
         };
         facts.recovery.official_site = page.page.snapshot.official;
-        facts.recovery.endpoint = match page.page.snapshot.endpoint.as_str() {
+        facts.recovery.endpoint = match page.page.snapshot.endpoint.split(';').next().unwrap_or("") {
             "acEntrada" => ceh_core::recovery::RecoveryEndpoint::ApplicantEntry,
             "acCitar" => ceh_core::recovery::RecoveryEndpoint::Availability,
             "acInfo" => ceh_core::recovery::RecoveryEndpoint::AuthInfo,

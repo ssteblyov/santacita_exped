@@ -6,7 +6,7 @@ _step => {
  };
  let entries = Array.from(document.querySelectorAll('#btnAccesoClave')).filter(visible);
  // The DGGM card queue has no Cl@ve: its information page (acInfo, volverInfo) only offers Entrar.
- if (entries.length === 0 && ['acInfo', 'volverInfo'].includes(location.pathname.split('/').pop())) {
+ if (entries.length === 0 && ['acInfo', 'volverInfo'].includes(location.pathname.split('/').pop().split(';')[0])) {
   entries = Array.from(document.querySelectorAll('#btnEntrar')).filter(visible);
  }
  if (entries.length !== 1) return 'refused';

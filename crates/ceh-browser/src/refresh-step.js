@@ -3,7 +3,7 @@ step => {
  try {
   // A same-URL assignment makes a fresh GET, never reuses the certificate POST.
   if(step.fetchApplicant){
-   if(location.pathname.split('/').pop()!=='acEntrada')return 'refused';
+   if(location.pathname.split('/').pop().split(';')[0]!=='acEntrada')return 'refused';
    started=true;location.assign(location.href);
   }else{started=true;location.reload();}
   return 'changed';

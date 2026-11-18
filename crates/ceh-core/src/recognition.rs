@@ -236,6 +236,8 @@ pub fn recognize(snapshot: &PageSnapshot) -> Result<Recognition, InvalidSnapshot
         return Ok(result);
     }
     let visible = |selector: &str| snapshot.visible.iter().any(|s| s == selector);
+    // A new server session can put `;jsessionid=…` into the path (Python `_flow_endpoint` drops it).
+    let endpoint = snapshot.endpoint.split(';').next().unwrap_or("");
     if !visible("body") {
         result.kind = PageKind::Loading;
         return Ok(result);
@@ -284,7 +286,7 @@ pub fn recognize(snapshot: &PageSnapshot) -> Result<Recognition, InvalidSnapshot
     } else if visible("select[id^=\"tramiteGrupo[\"]:visible") {
         PageKind::Procedure
     } else if visible("#btnAccesoClave")
-        || (matches!(snapshot.endpoint.as_str(), "acInfo" | "volverInfo") && visible("#btnEntrar"))
+        || (matches!(endpoint, "acInfo" | "volverInfo") && visible("#btnEntrar"))
     {
         // The DGGM card queue has no Cl@ve step: its information page (acInfo, or volverInfo after
         // Volver) only offers Entrar.
@@ -311,10 +313,7 @@ pub fn recognize(snapshot: &PageSnapshot) -> Result<Recognition, InvalidSnapshot
         } else {
             PageKind::RequestNoSlots
         }
-    } else if matches!(
-        snapshot.endpoint.as_str(),
-        "acValidarEntrada" | "acOpcDirect"
-    ) && visible("#btnEnviar")
+    } else if matches!(endpoint, "acValidarEntrada" | "acOpcDirect") && visible("#btnEnviar")
     {
         if snapshot.button_label.to_lowercase().contains("solicitar") {
             PageKind::RequestMenu

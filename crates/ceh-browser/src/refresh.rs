@@ -29,7 +29,7 @@ pub fn plan_refresh(
     match (observed.kind, observed.method) {
         (PageKind::ApplicantNoSlots, RequestMethod::Get) => Ok(RefreshAction::ReloadApplicant),
         (PageKind::ApplicantNoSlots, RequestMethod::Post)
-            if snapshot.endpoint == "acEntrada"
+            if snapshot.endpoint.split(';').next() == Some("acEntrada")
                 && !matches!(
                     previous,
                     Some("applicant" | "contact" | "request" | "office")
@@ -39,7 +39,7 @@ pub fn plan_refresh(
         }
         (PageKind::RequestNoSlots, RequestMethod::Get) => Ok(RefreshAction::ReloadAvailability),
         (PageKind::RequestNoSlots, RequestMethod::Post)
-            if snapshot.endpoint == "acCitar" && previous == Some("request") =>
+            if snapshot.endpoint.split(';').next() == Some("acCitar") && previous == Some("request") =>
         {
             Ok(RefreshAction::ReloadAvailability)
         }

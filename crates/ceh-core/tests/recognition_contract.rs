@@ -93,6 +93,8 @@ fn the_dggm_information_page_with_only_entrar_is_the_entry_step() {
     };
     assert_eq!(page("acInfo"), PageKind::Auth);
     assert_eq!(page("volverInfo"), PageKind::Auth);
+    // A fresh server session rewrites the form target to `acInfo;jsessionid=…`.
+    assert_eq!(page("acInfo;jsessionid=0A1B2C3D4E5F"), PageKind::Auth);
     // An Entrar button anywhere else is not taken for the entry step.
     assert_ne!(page("acEntrada"), PageKind::Auth);
 }
