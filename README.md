@@ -1,10 +1,8 @@
-# SantaCita
+# SantaCita Patch Expedición de Tarjetas
 
 🇬🇧 **English** · 🇷🇺 [Русский](README.ru.md) · 🇪🇸 [Español](README.es.md)
 
-[![Latest published release](https://img.shields.io/github/v/release/itwormz/santacita?sort=semver&label=release&color=626bdf&logo=github)](https://github.com/itwormz/santacita/releases)
-
-An assistant for **Toma de huellas / TIE** and **Autorización de regreso** appointments on ICP Plus. A new application built with Rust, Tauri and Svelte.
+An assistant for **Toma de huellas / TIE** and **Autorización de regreso**  and **EXPEDICIÓN DE TARJETAS CUYA AUTORIZACIÓN RESUELVE LA DIRECCIÓN GENERAL DE GESTIÓN MIGRATORIA** appointments on ICP Plus. A new application built with Rust, Tauri and Svelte.
 
 SantaCita 0.4.0 is the first stable release of the new application. The 0.3.x line is the previous Python application; its code stays in the `ceh-python` branch.
 
