@@ -138,8 +138,10 @@ pub struct PageFacts {
     pub clave_input_started: bool,
 }
 
-/// How many times one page may try the cookie banner when earlier clicks were never sent.
+/// How many times one page may try the cookie banner.
 const COOKIE_ATTEMPTS: usize = 3;
+/// A sent or uncertain banner click is repeated only after the banner had this long to close.
+const COOKIE_RETRY_MS: u64 = 4_000;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct DispatchRecord {
@@ -167,6 +169,8 @@ pub struct FlowEngine {
     attempted: Vec<(DocumentId, ActionKind)>,
     dispatches: Vec<DispatchRecord>,
     unsent_attempts: Vec<((DocumentId, ActionKind), usize)>,
+    /// When a sent or uncertain cookie-banner click on this document may be repeated.
+    cookie_retry_at: Option<(DocumentId, u64)>,
     reload_delay: f64,
     applicant_reload_penalty: f64,
     last_rate_limit_document: Option<DocumentId>,
@@ -196,6 +200,7 @@ impl FlowEngine {
             attempted: vec![],
             dispatches: vec![],
             unsent_attempts: vec![],
+            cookie_retry_at: None,
             reload_delay: AssistTimings::default().reload_seconds()[0],
             applicant_reload_penalty: 0.0,
             last_rate_limit_document: None,
@@ -811,18 +816,32 @@ impl FlowEngine {
         if facts.cookie_accept_available && cookie_page {
             let key = (observed.document.clone(), ActionKind::Cookie);
             let tries = self.attempted.iter().filter(|attempt| **attempt == key).count();
-            // A banner click with a receipt proving it was never sent (the page changed under it) is
-            // tried again a few times; otherwise the search would wait forever for a banner that never
-            // goes away by itself. A pending, sent or uncertain click is never repeated.
-            let unsent = self.dispatches.iter_mut().find(|r| {
-                r.guard == guard
-                    && r.action == ActionKind::Cookie
-                    && r.outcome == Some(DispatchOutcome::NotDispatched)
-            });
-            if tries == 0 || (tries < COOKIE_ATTEMPTS && unsent.is_some()) {
-                if let Some(record) = unsent {
+            // Accepting cookies is harmless to repeat, and the search waits for the banner to go before
+            // anything else, so a banner that is still there is clicked again a few times: at once when
+            // the click was proven unsent (the page changed under it), and after a pause when it was
+            // sent or uncertain (a minimised window, a click that missed). A click still awaiting its
+            // receipt is never repeated.
+            let retry_due = self
+                .cookie_retry_at
+                .as_ref()
+                .is_some_and(|(document, at)| document == &observed.document && now >= *at);
+            let record = self
+                .dispatches
+                .iter_mut()
+                .find(|r| r.guard == guard && r.action == ActionKind::Cookie);
+            let ready = match record.as_ref().and_then(|r| r.outcome) {
+                Some(DispatchOutcome::NotDispatched) => true,
+                Some(DispatchOutcome::Dispatched | DispatchOutcome::Unknown) => retry_due,
+                None => false,
+            };
+            if tries == 0 || (tries < COOKIE_ATTEMPTS && ready) {
+                if let Some(record) = record {
                     record.outcome = None;
                 }
+                self.cookie_retry_at = Some((
+                    observed.document.clone(),
+                    now.checked_add(COOKIE_RETRY_MS).ok_or(FlowError::ClockOverflow)?,
+                ));
                 self.attempted.push(key);
                 return Ok(vec![FlowEffect::AcceptCookies { guard }]);
             }

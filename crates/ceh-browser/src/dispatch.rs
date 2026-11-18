@@ -230,9 +230,12 @@ impl ActionPermit {
 }
 impl Drop for ActionPermit {
     fn drop(&mut self) {
-        if (!self.changed || self.stage == ReservationStage::Preparation)
-            && !self.pending
-            && !self.ambiguous
+        // A cookie-banner click is harmless to repeat, so its reservation never blocks a later one.
+        let repeatable = self.action == ActionKind::Cookie;
+        if (repeatable
+            || ((!self.changed || self.stage == ReservationStage::Preparation)
+                && !self.pending
+                && !self.ambiguous))
             && let Ok(mut state) = self.gate.0.lock()
         {
             state

@@ -173,7 +173,7 @@ fn cookie_click_refused_before_sending_is_retried_a_few_times_then_waits() {
     ));
 }
 #[test]
-fn cookie_click_that_was_sent_is_never_repeated() {
+fn cookie_click_that_was_sent_is_not_repeated_at_once() {
     let mut e = engine();
     let effects = e
         .observe_with_facts(page(PageKind::Province), banner(), 0)
@@ -205,4 +205,29 @@ fn a_retried_cookie_click_can_still_be_confirmed_as_sent() {
         e.observe(page(PageKind::Province), 2).unwrap().as_slice(),
         [FlowEffect::Prepare { action: ActionKind::Province, .. }]
     ));
+}
+#[test]
+fn a_banner_still_shown_after_a_sent_or_uncertain_click_is_clicked_again_after_a_pause() {
+    for outcome in [DispatchOutcome::Dispatched, DispatchOutcome::Unknown] {
+        let mut e = engine();
+        let mut at = 0;
+        for attempt in 0..3 {
+            let effects = e.observe_with_facts(page(PageKind::Province), banner(), at).unwrap();
+            let [FlowEffect::AcceptCookies { guard }] = effects.as_slice() else {
+                panic!("attempt {attempt} after {outcome:?} must click the banner again, got {effects:?}")
+            };
+            e.acknowledge_dispatch(&guard.clone(), ActionKind::Cookie, outcome).unwrap();
+            // Too soon: the banner may still be closing.
+            assert_eq!(
+                e.observe_with_facts(page(PageKind::Province), banner(), at + 1000).unwrap(),
+                vec![FlowEffect::ReobserveAt(at + 1500)]
+            );
+            at += 4000;
+        }
+        // Three clicks per page at most.
+        assert_eq!(
+            e.observe_with_facts(page(PageKind::Province), banner(), at + 10_000).unwrap(),
+            vec![FlowEffect::ReobserveAt(at + 10_500)]
+        );
+    }
 }
