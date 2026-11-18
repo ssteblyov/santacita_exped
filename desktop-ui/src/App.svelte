@@ -87,7 +87,7 @@ function changePreference(key:keyof Preferences,value:boolean|string){if(key==='
 async function chooseProfile(id:string){if(!selectionWrites)return;selected=id;profileMenu=false;const controller=selectionWrites;const result=await controller.set(id);if(controller.isCurrent(result)){selected=result.value;if(!result.ok)error='Не удалось сохранить выбор профиля';else if(error==='Не удалось сохранить выбор профиля')error='';}}
 async function openFolder(){try{await openDiagnostics();}catch{error='Не удалось открыть папку диагностики';}}
 
-const service=(procedure:string)=>t(procedure==='regreso'?'Autorización de regreso':'Toma de huellas / TIE');
+const service=(procedure:string)=>procedure==='huellas_dggm'?'TIE — DGGM (Ley 14/2013)':t(procedure==='regreso'?'Autorización de regreso':'Toma de huellas / TIE');
 onMount(()=>{bootstrap().then(result=>{data=result.data;native=result.native;selected=data.selected_profile;language=data.preferences.language;dark=data.preferences.dark;sound=data.preferences.sound;diagnostics=data.preferences.diagnostics;automaticUpdates=data.preferences.automatic_updates;betaUpdates=data.preferences.beta_updates;initializeWrites(result.data);void offerImport();}).catch(()=>{error='Не удалось прочитать профили';});});
 function closePopups(event:PointerEvent){const target=event.target as Element;if(!target.closest('.profile-picker'))profileMenu=false;if(!target.closest('.language-picker'))languageMenu=false;if(!target.closest('.more-picker'))moreMenu=false;}
 async function editProfile(id:string|null){if(loadingEditor)return;loadingEditor=true;try{await writes.settled();editor=await loadEditor(id);editingId=id;error='';}catch{error='Не удалось открыть профиль';}finally{loadingEditor=false;}}

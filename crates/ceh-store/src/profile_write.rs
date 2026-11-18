@@ -276,6 +276,8 @@ pub fn save_profile_changes(
         &["request", "procedure"],
         if draft.procedure == "regreso" {
             "AUTORIZACIÓN DE REGRESO"
+        } else if draft.procedure == "huellas_dggm" {
+            "POLICÍA-EXPEDICIÓN DE TARJETAS CUYA AUTORIZACIÓN RESUELVE LA DIRECCIÓN GENERAL DE GESTIÓN MIGRATORIA"
         } else {
             "POLICÍA-TOMA DE HUELLAS (EXPEDICIÓN DE TARJETA) INICIAL, RENOVACIÓN, DUPLICADO Y LEY 14/2013"
         },

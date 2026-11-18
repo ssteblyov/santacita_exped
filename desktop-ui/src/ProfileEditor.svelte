@@ -24,7 +24,7 @@ const risk=$derived(searchRisk(draft.applicant_no_slots_mode==='continue',Object
 let access=$state(draft.access_mode==='certificate'?'certificate':draft.access_mode==='clave'?draft.clave_method:'unconfigured');
 let lastDocument=draft.document_type;let regresoDocument=draft.document_type;const documentDrafts=new Map([[draft.document_type,draft.document_number]]);
 function documentChanged(type:string){documentDrafts.set(lastDocument,draft.document_number);draft.document_number=documentDrafts.get(type)??'';draft.document_type=type;lastDocument=type;}
-function procedureChanged(service:string){if(service==='huellas'){regresoDocument=draft.document_type;documentChanged('NIE');}else documentChanged(regresoDocument);}
+function procedureChanged(service:string){if(service!=='regreso'){regresoDocument=draft.document_type;documentChanged('NIE');}else documentChanged(regresoDocument);}
 const choices=(values:string[])=>values.map(value=>({value,label:value}));
 onMount(()=>{loadBrowsers().then(value=>{if(!alive)return;browsers=value;const next=editingId===null?preferredBrowser(value):fallbackBrowser(value,draft.browser);if(next&&next!==draft.browser)draft.browser=next;}).catch(()=>{});if(editingId)loadBudget(editingId).then(value=>{if(alive)budgetNote=value;}).catch(()=>{});dialog.showModal();dialog.querySelector<HTMLInputElement>('input')?.focus();return()=>{alive=false;notifications=null;dialog.close();};});
 async function save(){if(saving||notificationLoading)return;if(!['certificate','movil','permanente'].includes(access)){errors=[t('Выбрать способ авторизации')];return;}let timings:Timings|null=null;if(timingsDirty){try{timings=parseTimingInputs($state.snapshot(timingFields),model.timings);}catch{errors=[t('Проверить значения интервалов')];tab='timings';return;}}
@@ -41,7 +41,7 @@ async function save(){if(saving||notificationLoading)return;if(!['certificate','
  {#if tab==='data'}<div class="editor-grid">
   <Field label={t('Название профиля')} icon="user" bind:value={draft.label}/>
   <Choice label={t('Провинция')} icon="pin" bind:value={draft.province} options={choices(model.provinces)}/>
-  <Choice label={t('Услуга')} icon="file_text" bind:value={draft.procedure} options={[{value:'huellas',label:'Toma de huellas / TIE'},{value:'regreso',label:'Autorización de regreso'}]} onchange={procedureChanged}/>
+  <Choice label={t('Услуга')} icon="file_text" bind:value={draft.procedure} options={[{value:'huellas',label:'Toma de huellas / TIE'},{value:'huellas_dggm',label:'TIE — Dirección General de Gestión Migratoria (Ley 14/2013)'},{value:'regreso',label:'Autorización de regreso'}]} onchange={procedureChanged}/>
   <Choice label={t('Способ авторизации')} icon="key" bind:value={access} options={[{value:'certificate',label:t('Электронный сертификат')},{value:'movil',label:'Cl@ve Móvil'},{value:'permanente',label:'Cl@ve Permanente'}]}/>
   <div class="wide"><Choice label={t('Браузер')} icon="globe" bind:value={draft.browser} options={browserList.options}/>{#if browsers!==null&&!browsers.some(b=>b.support==='supported')}<p class="error browser-missing" role="alert">{t('Совместимый браузер не найден. Установите:')} {#each missingLinks as link,index}{#if index>0} · {/if}<button type="button" class="link-button" onclick={()=>void openPublicLink(link.id,language)}>{link.label}</button>{/each}</p>{#if onLinux}<p class="muted">{t('Версии из snap не подходят. Установите Chrome из пакета .deb или Firefox из APT-репозитория Mozilla.')}</p>{/if}{/if}</div>
   <div class="identity-modes"><div class="mode-buttons" role="group" aria-label={t('NIE и имя')}><button type="button" class:selected={draft.fill_mode==='copy'} aria-pressed={draft.fill_mode==='copy'} onclick={()=>draft.fill_mode='copy'}><Icon name="copy" size={17}/>{t('Из авторизации')}</button><button type="button" class:selected={draft.fill_mode==='manual'} aria-pressed={draft.fill_mode==='manual'} onclick={()=>draft.fill_mode='manual'}><Icon name="pencil" size={17}/>{t('Ввести вручную')}</button></div>{#if draft.fill_mode==='copy'}<small class="muted">{t('NIE и имя будут взяты после входа на сайт.')}</small>{/if}</div>
@@ -51,7 +51,7 @@ async function save(){if(saving||notificationLoading)return;if(!['certificate','
    <div class="wide"><Field label={t('Имя и фамилия')} icon="user" bind:value={draft.full_name}/></div>
   {/if}
   <Field label={t('Телефон')} icon="phone" bind:value={draft.phone} type="tel" maxlength={24}/><Field label={t('Почта')} icon="mail" bind:value={draft.email} type="email" maxlength={254}/>
-  {#if draft.procedure==='huellas'}<div class="wide"><Choice label={t('Гражданство')} icon="globe" bind:value={draft.nationality} options={choices(model.nationalities)}/></div>{/if}
+  {#if draft.procedure!=='regreso'}<div class="wide"><Choice label={t('Гражданство')} icon="globe" bind:value={draft.nationality} options={choices(model.nationalities)}/></div>{/if}
  </div>{:else if tab==='timings'}
  <div class="timings-grid">
  <h2>{t('Проверка сит')}</h2>

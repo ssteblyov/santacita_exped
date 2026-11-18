@@ -373,3 +373,24 @@ mod protection {
         }
     }
 }
+#[test]
+fn dggm_card_service_survives_save_and_reload() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("tasks.yml");
+    let source = source();
+    std::fs::write(&path, &source).unwrap();
+    let bundle = decode_profiles(source.as_bytes(), &catalog(), "ru").unwrap();
+    let revision = bundle.revision().to_owned();
+    let mut edited = draft(&source);
+    edited.procedure = "huellas_dggm".into();
+    let id = edited.id.clone();
+    save_profile(&path, Some(&id), edited, &revision, &catalog()).unwrap();
+    let saved = std::fs::read_to_string(&path).unwrap();
+    assert!(saved.contains(
+        "POLICÍA-EXPEDICIÓN DE TARJETAS CUYA AUTORIZACIÓN RESUELVE LA DIRECCIÓN GENERAL DE GESTIÓN MIGRATORIA"
+    ));
+    let reloaded = decode_profiles(saved.as_bytes(), &catalog(), "ru").unwrap();
+    let profile = &reloaded.profiles[0].validation;
+    assert_eq!(profile.normalized.procedure, "huellas_dggm");
+    assert!(profile.errors.is_empty(), "{:?}", profile.errors);
+}

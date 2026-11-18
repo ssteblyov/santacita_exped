@@ -281,7 +281,7 @@ impl<'a> StatisticsWriter<'a> {
             ("clave_method", &["movil", "permanente"]),
             ("no_slots_mode", &["salir", "reload"]),
             ("applicant_no_slots_mode", &["wait", "continue"]),
-            ("procedure", &["huellas", "regreso"]),
+            ("procedure", &["huellas", "huellas_dggm", "regreso"]),
             ("browser", &["firefox", "chrome", "brave", "edge", "chromium", "camoufox"]),
             ("app_version", &["historical"]),
         ] {

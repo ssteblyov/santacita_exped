@@ -18,6 +18,9 @@ use std::{
 const TIE: &str =
     "POLICÍA-TOMA DE HUELLAS (EXPEDICIÓN DE TARJETA) INICIAL, RENOVACIÓN, DUPLICADO Y LEY 14/2013";
 const REGRESO: &str = "AUTORIZACIÓN DE REGRESO";
+/// The card queue for permits the Dirección General de Gestión Migratoria decides (Ley 14/2013, UGE).
+const DGGM: &str =
+    "POLICÍA-EXPEDICIÓN DE TARJETAS CUYA AUTORIZACIÓN RESUELVE LA DIRECCIÓN GENERAL DE GESTIÓN MIGRATORIA";
 const MAX_NORMALIZED: usize = 4 * 1024 * 1024;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProfileLoadError {
@@ -329,6 +332,7 @@ fn convert(
     let procedure = budget.field(request, "procedure", "")?;
     let procedure = match procedure.as_str() {
         TIE => "huellas".into(),
+        DGGM => "huellas_dggm".into(),
         REGRESO => "regreso".into(),
         _ => procedure,
     };

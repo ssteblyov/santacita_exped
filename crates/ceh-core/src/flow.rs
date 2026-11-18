@@ -138,6 +138,9 @@ pub struct PageFacts {
     pub clave_input_started: bool,
 }
 
+/// How many times one page may try the cookie banner when earlier clicks were never sent.
+const COOKIE_ATTEMPTS: usize = 3;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct DispatchRecord {
     pub guard: DocumentGuard,
@@ -807,7 +810,19 @@ impl FlowEngine {
         );
         if facts.cookie_accept_available && cookie_page {
             let key = (observed.document.clone(), ActionKind::Cookie);
-            if !self.attempted.contains(&key) {
+            let tries = self.attempted.iter().filter(|attempt| **attempt == key).count();
+            // A banner click with a receipt proving it was never sent (the page changed under it) is
+            // tried again a few times; otherwise the search would wait forever for a banner that never
+            // goes away by itself. A pending, sent or uncertain click is never repeated.
+            let unsent = self.dispatches.iter_mut().find(|r| {
+                r.guard == guard
+                    && r.action == ActionKind::Cookie
+                    && r.outcome == Some(DispatchOutcome::NotDispatched)
+            });
+            if tries == 0 || (tries < COOKIE_ATTEMPTS && unsent.is_some()) {
+                if let Some(record) = unsent {
+                    record.outcome = None;
+                }
                 self.attempted.push(key);
                 return Ok(vec![FlowEffect::AcceptCookies { guard }]);
             }

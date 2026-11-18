@@ -29,7 +29,7 @@ fn bounded(value: &str, max: usize) -> bool {
 }
 impl ApplicantInput {
     pub fn from_profile(profile: &ProfileDraft) -> Result<Self, BrowserError> {
-        if !matches!(profile.procedure.as_str(), "huellas" | "regreso")
+        if !matches!(profile.procedure.as_str(), "huellas" | "huellas_dggm" | "regreso")
             || !matches!(profile.fill_mode.as_str(), "manual" | "copy")
             || !matches!(
                 profile.applicant_no_slots_mode.as_str(),

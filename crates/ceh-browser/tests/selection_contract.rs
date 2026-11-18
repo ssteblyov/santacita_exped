@@ -11,6 +11,10 @@ fn selection_data_accepts_only_supported_service_and_bounded_labels() {
         ActionKind::Procedure
     );
     assert_eq!(
+        Selection::procedure("huellas_dggm").unwrap().action(),
+        ActionKind::Procedure
+    );
+    assert_eq!(
         Selection::procedure("regreso").unwrap().action(),
         ActionKind::Procedure
     );

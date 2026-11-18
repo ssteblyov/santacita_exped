@@ -147,3 +147,62 @@ fn proven_unsent_pre_action_can_resume_but_unknown_delivery_cannot() {
         }
     }
 }
+#[test]
+fn cookie_click_refused_before_sending_is_retried_a_few_times_then_waits() {
+    let mut e = engine();
+    // Three attempts, each refused before the click was sent (NotDispatched): each one is tried again.
+    for at in 0..3 {
+        let effects = e
+            .observe_with_facts(page(PageKind::Province), banner(), at)
+            .unwrap();
+        let [FlowEffect::AcceptCookies { guard }] = effects.as_slice() else {
+            panic!("an unsent banner click must be tried again")
+        };
+        e.acknowledge_dispatch(&guard.clone(), ActionKind::Cookie, DispatchOutcome::NotDispatched)
+            .unwrap();
+    }
+    assert_eq!(
+        e.observe_with_facts(page(PageKind::Province), banner(), 3)
+            .unwrap(),
+        vec![FlowEffect::ReobserveAt(503)]
+    );
+    // The banner is gone (accepted by hand or by a late click): the province is chosen as usual.
+    assert!(matches!(
+        e.observe(page(PageKind::Province), 4).unwrap().as_slice(),
+        [FlowEffect::Prepare { action: ActionKind::Province, .. }]
+    ));
+}
+#[test]
+fn cookie_click_that_was_sent_is_never_repeated() {
+    let mut e = engine();
+    let effects = e
+        .observe_with_facts(page(PageKind::Province), banner(), 0)
+        .unwrap();
+    let [FlowEffect::AcceptCookies { guard }] = effects.as_slice() else {
+        panic!("cookie must precede preparation")
+    };
+    e.acknowledge_dispatch(&guard.clone(), ActionKind::Cookie, DispatchOutcome::Dispatched)
+        .unwrap();
+    assert_eq!(
+        e.observe_with_facts(page(PageKind::Province), banner(), 1)
+            .unwrap(),
+        vec![FlowEffect::ReobserveAt(501)]
+    );
+}
+#[test]
+fn a_retried_cookie_click_can_still_be_confirmed_as_sent() {
+    let mut e = engine();
+    let effects = e.observe_with_facts(page(PageKind::Province), banner(), 0).unwrap();
+    let [FlowEffect::AcceptCookies { guard }] = effects.as_slice() else { panic!() };
+    let guard = guard.clone();
+    e.acknowledge_dispatch(&guard, ActionKind::Cookie, DispatchOutcome::NotDispatched).unwrap();
+    assert!(matches!(
+        e.observe_with_facts(page(PageKind::Province), banner(), 1).unwrap().as_slice(),
+        [FlowEffect::AcceptCookies { .. }]
+    ));
+    e.acknowledge_dispatch(&guard, ActionKind::Cookie, DispatchOutcome::Dispatched).unwrap();
+    assert!(matches!(
+        e.observe(page(PageKind::Province), 2).unwrap().as_slice(),
+        [FlowEffect::Prepare { action: ActionKind::Province, .. }]
+    ));
+}

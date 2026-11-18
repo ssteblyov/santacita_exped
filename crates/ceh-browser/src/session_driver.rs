@@ -635,8 +635,12 @@ impl SessionDriver {
                     self.receipt(guard, *action, outcome, &mut receipts, now.saturating_add(executing_since.elapsed().as_millis() as u64))?;
                 }
                 FlowEffect::AcceptCookies { guard } => {
-                    let outcome =
-                        crate::cookies::accept(connection, &mut self.observer, &self.gate, guard)?;
+                    // The click path only reports a stale page or a failed read before the click is
+                    // sent, so the banner was not touched: say so, and core may try it again.
+                    let outcome = match crate::cookies::accept(connection, &mut self.observer, &self.gate, guard) {
+                        Err(BrowserError::StaleDocument | BrowserError::NoObservation) => DispatchOutcome::NotDispatched,
+                        other => other?,
+                    };
                     self.receipt(guard, ActionKind::Cookie, outcome, &mut receipts, now.saturating_add(executing_since.elapsed().as_millis() as u64))?;
                 }
                 FlowEffect::EnterAuthentication { guard, .. } => {

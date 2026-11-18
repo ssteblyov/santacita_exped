@@ -13,6 +13,10 @@ use serde_json::json;
 use std::time::{Duration, Instant};
 const HUELLAS: &str =
     "POLICÍA-TOMA DE HUELLAS (EXPEDICIÓN DE TARJETA) INICIAL, RENOVACIÓN, DUPLICADO Y LEY 14/2013";
+/// Madrid, Barcelona and Palma: the separate card queue for permits resolved by the Dirección General de
+/// Gestión Migratoria (Ley 14/2013, large companies and strategic groups), as named in those resolutions.
+const DGGM: &str =
+    "POLICÍA-EXPEDICIÓN DE TARJETAS CUYA AUTORIZACIÓN RESUELVE LA DIRECCIÓN GENERAL DE GESTIÓN MIGRATORIA";
 const SCRIPT: &str = include_str!("selection-step.js");
 /// Data only, never executable selectors/scripts. No Debug: later profile steps are private.
 pub struct Selection {
@@ -32,6 +36,7 @@ impl Selection {
     pub fn procedure(service: &str) -> Result<Self, BrowserError> {
         let labels = match service {
             "huellas" => vec![HUELLAS.to_owned()],
+            "huellas_dggm" => vec![DGGM.to_owned()],
             "regreso" => vec![
                 "AUTORIZACIÓN DE REGRESO".to_owned(),
                 "POLICIA-AUTORIZACIÓN DE REGRESO".to_owned(),

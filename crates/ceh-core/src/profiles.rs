@@ -177,7 +177,7 @@ pub fn validate_profile(mut value: ProfileDraft, catalog: &ProfileCatalog) -> Va
     {
         reject("request.office is not present in Barcelona catalog");
     }
-    if !matches!(value.procedure.as_str(), "huellas" | "regreso") {
+    if !matches!(value.procedure.as_str(), "huellas" | "huellas_dggm" | "regreso") {
         reject("request.procedure must be TIE fingerprints or autorización de regreso");
     }
     if value.subprocedure.as_ref().is_some_and(|s| !s.is_empty()) {
